@@ -15,7 +15,7 @@ type VoteEntry = {
 
 type Vote = {
   prompt: string
-  options: number
+  options: Array<string>
 }
 
 initializeApp();
@@ -41,9 +41,9 @@ const makeVoteEntry = async (
       .add({username, voteIndex}) as Promise<DocumentReference<VoteEntry>>;
 
 app.post("/", async (req: Request, res: Response) => {
-  const voteId = req.body.voteId as string;
-  const voter = req.body.voter as string;
-  const voteIndex = parseInt(req.body.voteIndex as string);
+  const voteId = req.body.voteId as string | undefined;
+  const voter = req.body.voter as string | undefined;
+  const voteIndex = parseInt((req.body.voteIndex as string | undefined) ?? "");
 
   if (!voteId) {
     res.status(400).send("Missing voteId");
@@ -64,7 +64,7 @@ app.post("/", async (req: Request, res: Response) => {
   if (
     Number.isNaN(voteIndex) ||
     voteIndex < 0 ||
-    voteIndex >= (vote.data()?.options ?? 0)
+    voteIndex >= (vote.data()?.options ?? []).length
   ) {
     res.status(400).json({error: "Invalid vote index"});
     return;
@@ -82,7 +82,7 @@ app.post("/", async (req: Request, res: Response) => {
 });
 
 app.get("/", async (req: Request, res: Response) => {
-  const voteId = req.body.voteId as string;
+  const voteId = req.query.voteId as string | undefined;
   if (!voteId) {
     res.status(400).send("Missing voteId");
     return;
@@ -98,7 +98,7 @@ app.get("/", async (req: Request, res: Response) => {
 });
 
 app.get("/entries", async (req: Request, res: Response) => {
-  const voteId = req.body.voteId as string;
+  const voteId = req.query.voteId as string | undefined;
   if (!voteId) {
     res.status(400).send("Missing voteId");
     return;
@@ -115,7 +115,7 @@ app.get("/entries", async (req: Request, res: Response) => {
 });
 
 app.get("/count", async (req: Request, res: Response) => {
-  const voteId = req.body.voteId as string;
+  const voteId = req.query.voteId as string | undefined;
 
   if (!voteId) {
     res.status(400).send("Missing voteId");
@@ -129,7 +129,7 @@ app.get("/count", async (req: Request, res: Response) => {
   }
 
   const collect = new Array<Promise<QuerySnapshot<VoteEntry>>>();
-  for (let i = 0; i < (vote.data()?.options ?? 0); i++) {
+  for (let i = 0; i < (vote.data()?.options ?? []).length; i++) {
     collect.push(vote.ref
         .collection("entries")
         .where("voteIndex", "==", i)
@@ -141,11 +141,3 @@ app.get("/count", async (req: Request, res: Response) => {
 });
 
 export const vote = functions.https.onRequest(app);
-
-// // Start writing Firebase Functions
-// // https://firebase.google.com/docs/functions/typescript
-//
-// export const helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
