@@ -117,7 +117,10 @@ app.get("/entries", async (req: Request, res: Response) => {
     return;
   }
 
-  if (!Number.isNaN(voteIndex) && (voteIndex < 0 || voteIndex >= (vote.data()?.options ?? []).length)) {
+  if (
+    !Number.isNaN(voteIndex) &&
+    (voteIndex < 0 || voteIndex >= (vote.data()?.options ?? []).length)
+  ) {
     res.status(400).json({error: "Invalid vote index"});
     return;
   }
