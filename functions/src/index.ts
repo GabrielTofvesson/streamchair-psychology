@@ -46,12 +46,12 @@ app.post("/", async (req: Request, res: Response) => {
   const voteIndex = parseInt((req.body.voteIndex as string | undefined) ?? "");
 
   if (!voteId) {
-    res.status(400).send("Missing voteId");
+    res.status(400).json({error: "Missing voteId"});
     return;
   }
 
   if (!voter) {
-    res.status(400).send("Missing voter");
+    res.status(400).json({error: "Missing voter"});
     return;
   }
 
@@ -84,7 +84,7 @@ app.post("/", async (req: Request, res: Response) => {
 app.get("/", async (req: Request, res: Response) => {
   const voteId = req.query.voteId as string | undefined;
   if (!voteId) {
-    res.status(400).send("Missing voteId");
+    res.status(400).json({error: "Missing voteId"});
     return;
   }
 
@@ -99,8 +99,15 @@ app.get("/", async (req: Request, res: Response) => {
 
 app.get("/entries", async (req: Request, res: Response) => {
   const voteId = req.query.voteId as string | undefined;
+  const voteIndexStr = req.query.voteIndex as string | undefined;
+  const voteIndex = parseInt(voteIndexStr ?? "");
   if (!voteId) {
-    res.status(400).send("Missing voteId");
+    res.status(400).json({error: "Missing voteId"});
+    return;
+  }
+
+  if (Number.isNaN(voteIndex) && voteIndexStr) {
+    res.status(400).json({error: "Invalid voteIndex"});
     return;
   }
 
@@ -110,7 +117,17 @@ app.get("/entries", async (req: Request, res: Response) => {
     return;
   }
 
-  const entries = await vote.ref.collection("entries").get();
+  if (!Number.isNaN(voteIndex) && (voteIndex < 0 || voteIndex >= (vote.data()?.options ?? []).length)) {
+    res.status(400).json({error: "Invalid vote index"});
+    return;
+  }
+
+  const entryCollection = vote.ref.collection("entries");
+  const entries = await (
+    Number.isNaN(voteIndex) ?
+      entryCollection :
+      entryCollection.where("voteIndex", "==", voteIndex)
+  ).get();
   res.json(entries.docs.map((d) => d.data()));
 });
 
@@ -118,7 +135,7 @@ app.get("/count", async (req: Request, res: Response) => {
   const voteId = req.query.voteId as string | undefined;
 
   if (!voteId) {
-    res.status(400).send("Missing voteId");
+    res.status(400).json({error: "Missing voteId"});
     return;
   }
 
