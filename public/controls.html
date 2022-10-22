@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/9.12.1/firebase-app-compat.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/9.12.1/firebase-auth-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-database-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-firestore-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-functions-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-messaging-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-storage-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-analytics-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-remote-config-compat.js"></script>
+    <script defer src="/__/firebase/9.12.1/firebase-performance-compat.js"></script>
+    <!-- 
+      initialize the SDK after all desired features are loaded, set useEmulator to false
+      to avoid connecting the SDK to running emulators.
+    -->
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+
+    <style media="screen">
+    .form-inputs {
+        padding: 40px;
+        flex: 60%;
+        display: flex;
+        width: 20%;
+        flex-direction: column;
+        align-content: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .form-btn {
+        margin: 20px 0px;
+        background-color: #f6fe00;
+        color: black;
+        padding: 10px 40px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+
+    .form-row {
+        border-bottom: 1px solid grey;
+        padding: 10px 0px;
+        position: relative;
+        margin: 10px 0px;
+    }
+
+    .form-row-number {
+        color: #8f63ff;
+        padding-right: 10px;
+    }
+
+    .form-row-field {
+        color: red;
+        position: absolute;
+        pointer-events: none;
+        transition: 0.5s;
+        top: 10px;
+        margin-left: 1em;
+    }
+
+    .form-row-field-input {
+        background-color: inherit;
+        border: none;
+        display: block;
+        position: absolute;
+        top: 10px;
+        transition: 0.5s;
+        margin-left: 1.5em;
+    }
+
+    .form-row-field-input:focus~label, input:not(:placeholder-shown)~label {
+        top: -5px;
+        font-size: 12px;
+        color: #003333;
+        font-weight: bold;
+    }
+
+    *:focus {
+        outline: none;
+    }
+    </style>
+  </head>
+  <body>
+    <h1>Controls</h1>
+    
+    <!-- Form for creating a vote with a prompt and between 2 and 4 options -->
+    <div class="form-inputs">
+        <form action="" method="POST" id="createVoteForm">
+            <div class="form-row">
+                <span class="form-row-number"></span>
+             
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-prompt">
+                <label for="POST-prompt" class="form-row-field">Prompt</label>
+            </div>
+            <div class="form-row">
+                <span class="form-row-number"></span>
+        
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt1">
+                <label for="POST-opt1" class="form-row-field">Option 1</label>
+            </div>
+            <div class="form-row">
+                <span class="form-row-number"></span>
+           
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt2">
+                <label for="POST-opt2" class="form-row-field">Option 2</label>
+            </div>
+            <div class="form-row">
+                <span class="form-row-number"></span>
+           
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt3">
+                <label for="POST-opt3" class="form-row-field">Option 3</label>
+            </div>
+            <div class="form-row">
+                <span class="form-row-number"></span>
+           
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt4">
+                <label for="POST-opt4" class="form-row-field">Option 4</label>
+            </div>
+            <input class="form-btn" type="submit" value="Create vote">
+        </form>
+    </div>
+
+    <script>
+        const DEBUG = true;
+        const target = (DEBUG ? "http://127.0.0.1:5001/" : "https://us-central1-streamchair-psychology.cloudfunctions.net/") + "streamchair-psychology/us-central1/";
+        
+      document.addEventListener('DOMContentLoaded', function() {
+        const createVoteForm = document.querySelector('#createVoteForm');
+
+        function processCreateVote(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(createVoteForm);
+            const prompt = formData.get("POST-prompt");
+
+            if (!prompt) {
+                alert("Please enter a prompt");
+                return;
+            }
+
+            const options = [];
+            for (let i = 1; i <= 4; i++) {
+                const option = formData.get(`POST-opt${i}`);
+                if (option) {
+                    options.push(option);
+                }
+            }
+
+            if (options.length < 2) {
+                alert("Please enter at least 2 options");
+                return;
+            }
+            
+            const req = new XMLHttpRequest();
+
+            req.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    alert(this.responseText);
+                } else {
+                    console.log(this.readyState, this.status);
+                }
+            };
+
+            req.open("POST", target + "admin/create");
+            req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            req.send(JSON.stringify({
+                prompt,
+                options
+            }));
+        }
+
+        if (createVoteForm.attachEvent) {
+            createVoteForm.attachEvent("submit", processCreateVote);
+        } else {
+            createVoteForm.addEventListener("submit", processCreateVote);
+        }
+
+        //const loadEl = document.querySelector('#load');
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+        // // The Firebase SDK is initialized and available here!
+        //
+        // firebase.auth().onAuthStateChanged(user => { });
+        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+        // firebase.firestore().doc('/foo/bar').get().then(() => { });
+        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
+        // firebase.messaging().requestPermission().then(() => { });
+        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+        // firebase.analytics(); // call to activate
+        // firebase.analytics().logEvent('tutorial_completed');
+        // firebase.performance(); // call to activate
+        //
+        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+        try {
+          let app = firebase.app();
+          /*
+          let features = [
+            'auth', 
+            'database', 
+            'firestore',
+            'functions',
+            'messaging', 
+            'storage', 
+            'analytics', 
+            'remoteConfig',
+            'performance',
+          ].filter(feature => typeof app[feature] === 'function');
+          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+          */
+        } catch (e) {
+          console.error(e);
+          //loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+        }
+      });
+    </script>
+  </body>
+</html>
