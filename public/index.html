@@ -378,7 +378,7 @@
               const newVote = document.createElement("li");
               newVote.style.width = totalVotes == 0 ? `${100/activeVoteData.options.length}%` : `${(activeVoteData.votes[i] / totalVotes * 100)}%`;
               newVote.style.backgroundColor = `var(--vote${i + 1})`;
-              newVote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}%` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
+              newVote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
               votes.appendChild(newVote);
             }
           } else {
@@ -393,7 +393,7 @@
             const votesChildren = votes.children;
             for (let i = 0; i < votesChildren.length; i++) {
               const vote = votesChildren[i];
-              vote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}%` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
+              vote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
               vote.style.width = totalVotes == 0 ? `${100/activeVoteData.options.length}%` : (activeVoteData.votes[i] / totalVotes * 100) + "%";
             }
           }
