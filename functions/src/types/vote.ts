@@ -28,6 +28,7 @@ export type Vote = {
 export const getEntriesCollection = (vote: DocumentReference<Vote>) =>
   vote.collection(entriesCollectionName);
 
+export const getAllVotes = async () => await votesCollection.get();
 
 export const getVoteSnapshot = async (id: string) =>
     votesCollection

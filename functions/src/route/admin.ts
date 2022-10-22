@@ -1,6 +1,8 @@
+import * as functions from "firebase-functions";
 import express, {Request, Response} from "express";
 import cors from "cors";
-import {createVote, setActiveVote} from "../types/vote";
+import {createVote, setActiveVote, getAllVotes} from "../types/vote";
+import { setState, updateState } from "../types/state";
 
 const app = express();
 
@@ -26,7 +28,12 @@ app.post("/create", async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({id: await createVote(prompt, description, options)});
+  const id = await createVote(prompt, description, options);
+  await setState(id);
+
+  console.log("set state")
+
+  res.json({id});
 });
 
 app.put("/setActive", async (req: Request, res: Response) => {
@@ -37,7 +44,12 @@ app.put("/setActive", async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({success: await setActiveVote(voteId)});
+  const success = await setActiveVote(voteId);
+  if (success) {
+    await updateState();
+  }
+
+  res.json({success});
 });
 
 app.put("/closeVote", async (req: Request, res: Response) => {
@@ -48,7 +60,19 @@ app.put("/closeVote", async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({success: await setActiveVote(voteId, false)});
+  const success = await setActiveVote(voteId, false);
+  if (success) {
+    await updateState();
+  }
+
+  res.json({success});
 });
+
+export const getAllVotesCall = functions.https.onCall(async () => 
+    (await getAllVotes()).docs.map((vote) => ({
+        ...vote.data(),
+        id: vote.id,
+    }))
+);
 
 export default app;

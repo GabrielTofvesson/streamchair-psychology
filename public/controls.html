@@ -23,6 +23,13 @@
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
     <style media="screen">
+        :root {
+            --voteCardColor: #e5e5e5;
+        }
+        #createVote {
+            display: flex;
+            width: 50%;
+        }
     .form-inputs {
         padding: 40px;
         flex: 60%;
@@ -85,52 +92,95 @@
     *:focus {
         outline: none;
     }
+
+    #splitpage {
+        display: flex;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    #votes {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        width: 50%;
+    }
+
+    .btn-activate {
+        margin: 20px;
+        background-color: #f6fe00;
+        color: black;
+        padding: 10px 40px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-close {
+        margin: 20px;
+        background-color: red;
+        color: black;
+        padding: 10px 40px;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+    }
     </style>
   </head>
   <body>
     <h1>Controls</h1>
-    
-    <!-- Form for creating a vote with a prompt and between 2 and 4 options -->
-    <div class="form-inputs">
-        <form action="" method="POST" id="createVoteForm">
-            <div class="form-row">
-                <span class="form-row-number"></span>
-             
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-prompt">
-                <label for="POST-prompt" class="form-row-field">Prompt</label>
-            </div>
-            <div class="form-row">
-                <span class="form-row-number"></span>
-             
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-description">
-                <label for="POST-prompt" class="form-row-field">Description</label>
-            </div>
-            <div class="form-row">
-                <span class="form-row-number"></span>
-        
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt1">
-                <label for="POST-opt1" class="form-row-field">Option 1</label>
-            </div>
-            <div class="form-row">
-                <span class="form-row-number"></span>
-           
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt2">
-                <label for="POST-opt2" class="form-row-field">Option 2</label>
-            </div>
-            <div class="form-row">
-                <span class="form-row-number"></span>
-           
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt3">
-                <label for="POST-opt3" class="form-row-field">Option 3</label>
-            </div>
-            <div class="form-row">
-                <span class="form-row-number"></span>
-           
-                <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt4">
-                <label for="POST-opt4" class="form-row-field">Option 4</label>
-            </div>
-            <input class="form-btn" type="submit" value="Create vote">
-        </form>
+    <div id="splitpage">
+        <!-- Form for creating a vote with a prompt and between 2 and 4 options -->
+        <div id="createVote" class="form-inputs">
+            <form action="" method="POST" id="createVoteForm">
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+                 
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-prompt">
+                    <label for="POST-prompt" class="form-row-field">Prompt</label>
+                </div>
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+                 
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-description">
+                    <label for="POST-prompt" class="form-row-field">Description</label>
+                </div>
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+            
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt1">
+                    <label for="POST-opt1" class="form-row-field">Option 1</label>
+                </div>
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+               
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt2">
+                    <label for="POST-opt2" class="form-row-field">Option 2</label>
+                </div>
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+               
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt3">
+                    <label for="POST-opt3" class="form-row-field">Option 3</label>
+                </div>
+                <div class="form-row">
+                    <span class="form-row-number"></span>
+               
+                    <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt4">
+                    <label for="POST-opt4" class="form-row-field">Option 4</label>
+                </div>
+                <input class="form-btn" type="submit" value="Create vote">
+            </form>
+        </div>
+        <div id="votes">
+            <ul id="votelist">
+                
+            </ul>
+        </div>
     </div>
 
     <script>
@@ -139,6 +189,88 @@
         
       document.addEventListener('DOMContentLoaded', function() {
         const createVoteForm = document.querySelector('#createVoteForm');
+
+        function createVoteEntry(vote) {
+            const li = document.createElement('li');
+            li.style.display = "flex";
+            li.style.flexDirection = "column";
+            li.style.width = "100%";
+            li.style.margin = "20px";
+            li.style.backgroundColor = "var(--voteCardColor)";
+            li.style.borderRadius = "10px";
+            li.style.padding = "20px";
+
+            const title = document.createElement('h3');
+            title.innerText = vote.prompt;
+
+            li.appendChild(title);
+
+            const ul = document.createElement('ul');
+            ul.style.listStyleType = "none";
+
+            for (let i = 0; i < vote.options.length; i++) {
+                const option = vote.options[i];
+                const li = document.createElement('li');
+                li.innerText = option;
+                ul.appendChild(li);
+            }
+
+            li.appendChild(ul);
+
+            const div = document.createElement('div');
+            div.style.display = "flex";
+            div.style.flexDirection = "row";
+            div.style.justifyContent = "space-between";
+
+            const buttonSetActive = document.createElement('button');
+            buttonSetActive.innerText = "Set active";
+            buttonSetActive.addEventListener('click', () => {
+                fetch(target + 'admin/setActive', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        voteId: vote.id
+                    })
+                });
+            });
+            buttonSetActive.classList.add('btn-activate');
+            div.appendChild(buttonSetActive);
+
+            const buttonClose = document.createElement('button');
+            buttonClose.innerText = "Close";
+            buttonClose.addEventListener('click', () => {
+                fetch(target + 'admin/closeVote', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        voteId: vote.id
+                    })
+                });
+            });
+            buttonClose.classList.add('btn-close');
+            div.appendChild(buttonClose);
+
+            li.appendChild(div);
+
+            return li;
+        }
+
+        const getAllVotes = firebase.functions().httpsCallable('getAllVotes');
+        function updateVoteList() {
+            getAllVotes().then((result) => {
+                const votelist = document.querySelector('#votelist');
+                while (votelist.firstChild) {
+                    votelist.removeChild(votelist.firstChild);
+                }
+                for (let i = 0; i < result.data.length; i++) {
+                    votelist.appendChild(createVoteEntry(result.data[i]));
+                }
+            });
+        }
 
         function processCreateVote(e) {
             e.preventDefault();
@@ -171,15 +303,6 @@
             }
             
             const req = new XMLHttpRequest();
-
-            req.onreadystatechange = function() {
-                if (this.readyState == 4 && this.status == 200) {
-                    alert(this.responseText);
-                } else {
-                    console.log(this.readyState, this.status);
-                }
-            };
-
             req.open("POST", target + "admin/create");
             req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             req.send(JSON.stringify({
@@ -194,6 +317,8 @@
         } else {
             createVoteForm.addEventListener("submit", processCreateVote);
         }
+
+        updateVoteList();
 
         //const loadEl = document.querySelector('#load');
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
@@ -210,6 +335,19 @@
         // firebase.performance(); // call to activate
         //
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+        let currentState = undefined;
+        function onChange(change) {
+            change.docs.forEach(doc => {
+                const changeData = doc.data();
+                if (currentState === undefined || changeData.currentVote !== currentState.currentVote || changeData.changes !== currentState.changes)
+                    updateVoteList();
+
+                currentState = changeData;
+            });
+        }
+
+        firebase.firestore().collection('state').onSnapshot(onChange);
 
         try {
           let app = firebase.app();

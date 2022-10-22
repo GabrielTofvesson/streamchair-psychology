@@ -10,6 +10,7 @@ import {
   getVote,
   getActiveVote,
 } from "../types/vote";
+import { updateVoteCount } from "../types/state";
 
 
 const app = express();
@@ -47,11 +48,13 @@ app.post("/", async (req: Request, res: Response) => {
   const entry = await getVoteEntry(vote.ref, voter);
   if (!entry) {
     await makeVoteEntry(vote.ref, voter, voteIndex);
+    await updateVoteCount();
     res.json({success: true});
     return;
   }
 
   await updateVoteEntry(entry, voteIndex);
+  await updateVoteCount();
   res.json({success: true});
 });
 

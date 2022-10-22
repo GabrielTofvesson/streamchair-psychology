@@ -61,7 +61,7 @@
         text-align: center;
         font-size: 14px;
         z-index: 100;
-        height: 33%;
+        height: 35%;
         display: flex;
         flex-direction: row;
         background-color: #ffffff;
@@ -136,7 +136,7 @@
 
       #voteprompt {
         margin-bottom: 1px;
-        margin-top: 5px;
+        margin-top: 2px;
       }
 
       #votes {
@@ -147,6 +147,7 @@
         padding: 0px;
         width: 100%;
         height: 35px;
+        margin: 5px 0px;
         overflow: hidden;
         /* background-color: #ffa100; */
       }
@@ -223,28 +224,31 @@
         flex-wrap: wrap;
         display: flex;
         list-style: none;
-        align-items: center;
+        align-items: stretch;
         justify-content: space-evenly;
         padding: 0px;
       }
 
       #voteopts > li {
-        flex: 1 0 50%;
-        padding: 0px;
+        flex: 1 0 35%;
         display: flex;
         align-items: center;
         justify-content: center;
+        margin: 1%;
+        border-color: black;
+        border-style: solid;
+        border-width: 2px;
       }
 
       #voteopts > li > strong {
         width: auto;
-        margin: 0px;
-        padding: 4px 25%;
+        margin: 5px 0px;
+        padding: 2px 0px;
         color: var(--titleColor);
       }
 
       /* General styles */
-      #voteopts > li > strong, .outlinebox {
+      .outlinebox {
         outline-color: black;
         outline-style: solid;
         outline-width: 2px;
@@ -301,8 +305,10 @@
             <p style="text-align: start; color: var(--infoColor);">Vote by typing one of the following options in chat.</p>
             <div id="optsandinfo">
               <ul id="voteopts">
+                <!--
                 <li><strong>/Yes</strong></li>
                 <li><strong>/No</strong></li>
+                -->
               </ul>
               <p style="margin: 0px; align-self: center; color: var(--infoColor);">23 votes registered</p>
             </div>
@@ -406,21 +412,24 @@
         function updateVote() {
           activeVote().then((data) => {
             if (data && data.data) {
-              if (!activeVoteData || activeVoteData.id !== data.id) {
+              console.log(activeVoteData, data);
+              if (!activeVoteData || activeVoteData.voteId !== data.data.voteId) {
                 activeVoteData = data.data;
+                console.log("Full update");
                 updateVoteUI(true);
               } else {
                 activeVoteData = data.data;
+                console.log("Partial update");
                 updateVoteUI(false);
               }
             }
-
-            setTimeout(updateVote, voteUpdateInterval);
           });
         }
 
         updateVoteUI(true);
         updateVote();
+
+        firebase.firestore().collection('state').onSnapshot(updateVote);
 
         try {
           let app = firebase.app();
