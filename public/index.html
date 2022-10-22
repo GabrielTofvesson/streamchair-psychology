@@ -218,6 +218,14 @@
 
       #votes > li {
         padding: 8px 0px;
+        -webkit-transition-property: width;
+        -moz-transition-property: width;
+        -o-transition-property: width;
+        transition-property: width;
+        -webkit-transition-timing-function: ease-in-out;
+        -moz-transition-timing-function: ease-in-out;
+        -o-transition-timing-function: ease-in-out;
+        transition-timing-function: ease-in-out;
       }
 
       #voteopts {
@@ -323,6 +331,7 @@
 
     <script>
       const voteUpdateInterval = 1000;
+      const maxBarAnimateTime = 2; // Seconds
       document.addEventListener('DOMContentLoaded', function() {
         //const loadEl = document.querySelector('#load');
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
@@ -398,10 +407,34 @@
 
             // Update votes list
             const votesChildren = votes.children;
+            let maxTime = totalVotes == 0 ? 0 : maxBarAnimateTime;
+            for (let i = 0; i < votesChildren.length; i++) {
+              const changePC = Math.abs(
+                votesChildren[i]
+                  .style
+                  .width
+                  .substring(0, votesChildren[i].style.width.length - 1) -
+                    (totalVotes == 0 ?
+                      1 / activeVoteData.options.length :
+                      activeVoteData.votes[i] / totalVotes
+                    ) * 100
+                );
+              if (changePC > maxTime) {
+                maxTime = changePC;
+              }
+            }
+
+            maxTime /= 100;
+
+            console.log(maxTime);
+
             for (let i = 0; i < votesChildren.length; i++) {
               const vote = votesChildren[i];
-              vote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
-              vote.style.width = totalVotes == 0 ? `${100/activeVoteData.options.length}%` : (activeVoteData.votes[i] / totalVotes * 100) + "%";
+              const changePC = totalVotes == 0 ? 1 / activeVoteData.options.length : activeVoteData.votes[i] / totalVotes;
+              const change = changePC * 100;
+              vote.innerHTML = activeVoteData.options[i] + " (" + (+change.toFixed(2)) + "%)";
+              vote.style.width = change + "%";
+              vote.style.transitionDuration = (maxBarAnimateTime * maxTime) + "s";
             }
           }
 
