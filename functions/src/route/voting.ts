@@ -12,28 +12,26 @@ import {
 } from "../types/vote";
 import {updateVoteCount} from "../types/state";
 
+type VoteResult = {success: true} | {error: string, code: number};
 
 const app = express();
 
-app.post("/", async (req: Request, res: Response) => {
-  const voteId = req.body.voteId as string | undefined;
-  const voter = req.body.voter as string | undefined;
-  const voteIndex = parseInt((req.body.voteIndex as string | undefined) ?? "");
-
+const vote = async (
+    voteId: string | undefined,
+    voter: string | undefined,
+    voteIndex: number
+): Promise<VoteResult> => {
   if (!voteId) {
-    res.status(400).json({error: "Missing voteId"});
-    return;
+    return {error: "Missing voteId", code: 400};
   }
 
   if (!voter) {
-    res.status(400).json({error: "Missing voter"});
-    return;
+    return {error: "Missing voter", code: 400};
   }
 
   const vote = await getVoteSnapshot(voteId);
   if (!vote.exists) {
-    res.status(404).json({error: "Vote not found"});
-    return;
+    return {error: "Vote not found", code: 404};
   }
 
   if (
@@ -41,21 +39,29 @@ app.post("/", async (req: Request, res: Response) => {
     voteIndex < 0 ||
     voteIndex >= (vote.data()?.options ?? []).length
   ) {
-    res.status(400).json({error: "Invalid vote index"});
-    return;
+    return {error: "Invalid vote index", code: 400};
   }
 
   const entry = await getVoteEntry(vote.ref, voter);
   if (!entry) {
     await makeVoteEntry(vote.ref, voter, voteIndex);
     await updateVoteCount();
-    res.json({success: true});
-    return;
+    return {success: true};
   }
 
   await updateVoteEntry(entry, voteIndex);
   await updateVoteCount();
-  res.json({success: true});
+  return {success: true};
+};
+
+app.post("/", async (req: Request, res: Response) => {
+  const voteId = req.body.voteId as string | undefined;
+  const voter = req.body.voter as string | undefined;
+  const voteIndex = parseInt((req.body.voteIndex as string | undefined) ?? "");
+
+  const result = await vote(voteId, voter, voteIndex);
+  if ("error" in result) res.status(result.code).json({error: result.error});
+  else res.json(result);
 });
 
 app.get("/", async (req: Request, res: Response) => {
@@ -137,6 +143,15 @@ export const activeVoteState = functions.https.onCall(async () => {
     votes: (await Promise.all(getVoteCounts(voteData)))
         .map((query) => query.size),
   };
+});
+
+export const callVote = functions.https.onCall(async (data) => {
+  const voteId = data.voteId as string | undefined;
+  const voter = data.voter as string | undefined;
+  const voteIndex = parseInt((data.voteIndex as string | undefined) ?? "");
+
+  const result = await vote(voteId, voter, voteIndex);
+  return "error" in result ? {error: result.error} : {success: true};
 });
 
 export default app;
