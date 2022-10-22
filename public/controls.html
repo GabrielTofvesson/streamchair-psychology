@@ -134,7 +134,7 @@
     </div>
 
     <script>
-        const DEBUG = true;
+        const DEBUG = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const target = DEBUG ? "http://127.0.0.1:5001/streamchair-psychology/us-central1/" : "https://us-central1-streamchair-psychology.cloudfunctions.net/";
         
       document.addEventListener('DOMContentLoaded', function() {
