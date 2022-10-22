@@ -2,7 +2,7 @@ import * as functions from "firebase-functions";
 import express, {Request, Response} from "express";
 import cors from "cors";
 import {createVote, setActiveVote, getAllVotes} from "../types/vote";
-import { setState, updateState } from "../types/state";
+import {setState, updateState} from "../types/state";
 
 const app = express();
 
@@ -31,7 +31,7 @@ app.post("/create", async (req: Request, res: Response) => {
   const id = await createVote(prompt, description, options);
   await setState(id);
 
-  console.log("set state")
+  console.log("set state");
 
   res.json({id});
 });
@@ -68,11 +68,11 @@ app.put("/closeVote", async (req: Request, res: Response) => {
   res.json({success});
 });
 
-export const getAllVotesCall = functions.https.onCall(async () => 
-    (await getAllVotes()).docs.map((vote) => ({
-        ...vote.data(),
-        id: vote.id,
-    }))
+export const getAllVotesCall = functions.https.onCall(async () =>
+  (await getAllVotes()).docs.map((vote) => ({
+    ...vote.data(),
+    id: vote.id,
+  }))
 );
 
 export default app;

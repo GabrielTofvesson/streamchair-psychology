@@ -10,7 +10,7 @@ import {
   getVote,
   getActiveVote,
 } from "../types/vote";
-import { updateVoteCount } from "../types/state";
+import {updateVoteCount} from "../types/state";
 
 
 const app = express();
