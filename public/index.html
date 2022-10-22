@@ -411,9 +411,11 @@
         const activeVote = firebase.functions().httpsCallable('activeVote');
         function updateVote() {
           activeVote().then((data) => {
-            if (data && data.data) {
-              console.log(activeVoteData, data);
-              if (!activeVoteData || activeVoteData.voteId !== data.data.voteId) {
+            if (data) {
+              if (!data.data) {
+                activeVoteData = undefined;
+                updateVoteUI(true);
+              } else if (!activeVoteData || activeVoteData.voteId !== data.data.voteId) {
                 activeVoteData = data.data;
                 console.log("Full update");
                 updateVoteUI(true);
