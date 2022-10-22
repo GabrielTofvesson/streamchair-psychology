@@ -24,6 +24,17 @@
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
     <style media="screen">
+      :root {
+        --ruleColor: #999;
+        --titleColor: #333;
+        --textColor: #444;
+        --infoColor: #666;
+        --vote1: #444;
+        --vote2: #888;
+        --vote3: #ccc;
+        --vote4: #eee;
+      }
+
       body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
       #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
       #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
@@ -36,9 +47,190 @@
         body, #message { margin-top: 0; background: white; box-shadow: none; }
         body { border-top: 16px solid #ffa100; }
       }
+
+      h1, h2, h3, h4 {
+        color: var(--titleColor);
+      }
+
+      #prompt {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 8px 16px;
+        text-align: center;
+        font-size: 14px;
+        z-index: 100;
+        height: 33%;
+        display: flex;
+        flex-direction: row;
+        /* margin-bottom: 5%; */ /* TODO: Remove */
+        /*
+        background: #039be5;
+        color: white;
+        */
+      }
+
+      /* Twitch chat */
+      #chat {
+        display: flex;
+        width: 20%;
+        margin: 8px;
+        flex-direction: column;
+        /* background: #ffa100; */
+      }
+
+      #chattitle {
+        align-self: center;
+        margin-bottom: 1px;
+        margin-top: 10px;
+      }
+
+      #chatcontent {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow-y: scroll;
+        padding: 8px 16px;
+        list-style: none;
+        align-items: flex-start;
+        margin-top: 1px;
+      }
+
+      hr.solid {
+        border-top: 3px solid var(--ruleColor);
+        border-radius: 5px;
+        margin-left: 5px;
+        margin-right: 5px;
+      }
+
+      /* Main vote info section */
+      #voteinfo {
+        display: flex;
+        width: 80%;
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 8px 16px;
+        margin: 8px;
+        /* background: #123123; */
+      }
+
+      #voteprompt {
+        margin-bottom: 1px;
+        margin-top: 5px;
+      }
+
+      #votes {
+        list-style: none;
+        display: flex;
+        flex-direction: row;
+        padding: 0px;
+        width: 100%;
+        /* background-color: #ffa100; */
+      }
+
+      #voteextrainfo {
+        height: 100%;
+        align-self: stretch;
+        margin: 0px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: stretch;
+        align-content: stretch;
+      }
+
+      #votedetails {
+        display: flex;
+        flex-direction: column;
+        width: 80%;
+        margin-right: 8px;
+        /* background-color: #ffa100; */
+      }
+
+      #votehelp {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        margin-left: 8px;
+        width: 20%;
+        /* background-color: #ffa100; */
+      }
+
+      .posttitle {
+        align-self: flex-start;
+        margin-bottom: 1px;
+        margin-top: 5px;
+      }
+
+      #postdescription {
+        font-size: 16px;
+        text-align: start;
+        color: var(--textColor);
+      }
+
+      #tipbox {
+        display: flex;
+        flex-direction: row;
+        align-items: baseline;
+        margin-top: auto;
+        justify-content: flex-start;
+        width: 100%;
+      }
+
+      .verticalrule {
+        border: 1px solid var(--ruleColor);
+        width: 0px;
+        height: auto;
+        outline: none;
+      }
+
+      #optsandinfo {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        margin-top: auto;
+        width: 100%;
+      }
+
+      #votes > li {
+        padding: 8px 0px;
+      }
+
+      #voteopts {
+        flex-wrap: wrap;
+        display: flex;
+        list-style: none;
+        align-items: center;
+        justify-content: space-evenly;
+        padding: 0px;
+      }
+
+      #voteopts > li {
+        flex: 1 0 50%;
+        padding: 0px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #voteopts > li > strong {
+        width: auto;
+        margin: 0px;
+        padding: 4px 25%;
+        color: var(--titleColor);
+      }
+
+      /* General styles */
+      #voteopts > li > strong, .outlinebox {
+        outline-color: black;
+        outline-style: solid;
+        outline-width: 1px;
+      }
     </style>
   </head>
   <body>
+    <!--
     <div id="message">
       <h2>Welcome</h2>
       <h1>Firebase Hosting Setup Complete</h1>
@@ -47,9 +239,55 @@
     </div>
     <p id="load">Firebase SDK Loading&hellip;</p>
 
+    -->
+
+
+    <div id="prompt" class="outlinebox">
+      <div id="chat" class="outlinebox">
+        <h2 id="chattitle">JURY NOTES</h2>
+        <hr class="solid">
+        <ul id="chatcontent">
+          <li>asdfasdfasdf</li>
+          <li>asdf234234</li>
+          <li>rhg 465y 4</li>
+          <li>5u 5j  </li>
+        </ul>
+      </div>
+
+      <div id="voteinfo" class="outlinebox">
+        <h1 id="voteprompt">Is OP the asshole?</h1>
+        <ul id="votes" class="outlinebox">
+          <li style="width: 60%; background-color: var(--vote1);">/Yes (60%)</li>
+          <li style="width: 40%; background-color: var(--vote4);">/No (40%)</li>
+        </ul>
+        <div id="voteextrainfo">
+          <div id="votedetails">
+            <h2 class="posttitle">Post title</h2>
+            <p id="postdescription">My friends and I want to watch movies that our traumatized friend may find triggering - Would I be the asshole to just not invite her anymore?</p>
+            <div id="tipbox">
+              <h3 style="padding-right: 5px; margin-bottom: 0px;">TIP:</h3>
+              <p style="margin-bottom: 0px;">Get transcript link with the /source command in chat!</p>
+            </div>
+          </div>
+          <hr class="verticalrule">
+          <div id="votehelp">
+            <h3 class="posttitle">VOTE NOW!</h3>
+            <p style="text-align: start; color: var(--infoColor);">Vote by typing one of the following options in chat.</p>
+            <div id="optsandinfo">
+              <ul id="voteopts">
+                <li><strong>/Yes</strong></li>
+                <li><strong>/No</strong></li>
+              </ul>
+              <p style="margin: 0px; align-self: center; color: var(--infoColor);">23 votes registered</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script>
       document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
+        //const loadEl = document.querySelector('#load');
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         // // The Firebase SDK is initialized and available here!
         //
@@ -67,6 +305,7 @@
 
         try {
           let app = firebase.app();
+          /*
           let features = [
             'auth', 
             'database', 
@@ -79,9 +318,10 @@
             'performance',
           ].filter(feature => typeof app[feature] === 'function');
           loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
+          */
         } catch (e) {
           console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+          //loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
         }
       });
     </script>
