@@ -123,6 +123,17 @@
         /* background: #123123; */
       }
 
+      #novote {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex: 1;
+        width: 80%;
+        padding: 8px 16px;
+        margin: 8px;
+      }
+
       #voteprompt {
         margin-bottom: 1px;
         margin-top: 5px;
@@ -132,8 +143,10 @@
         list-style: none;
         display: flex;
         flex-direction: row;
+        align-items: center;
         padding: 0px;
         width: 100%;
+        overflow-x: hidden;
         /* background-color: #ffa100; */
       }
 
@@ -235,6 +248,10 @@
         outline-style: solid;
         outline-width: 2px;
       }
+
+      .hidden {
+        display: none !important;
+      }
     </style>
   </head>
   <body>
@@ -265,8 +282,8 @@
       <div id="voteinfo" class="outlinebox">
         <h1 id="voteprompt">Is OP the asshole?</h1>
         <ul id="votes" class="outlinebox">
-          <li style="width: 60%; background-color: var(--vote1);">/Yes (60%)</li>
-          <li style="width: 40%; background-color: var(--vote4);">/No (40%)</li>
+          <!--<li style="width: 60%; background-color: var(--vote1);">/Yes (60%)</li>
+          <li style="width: 40%; background-color: var(--vote4);">/No (40%)</li>-->
         </ul>
         <div id="voteextrainfo">
           <div id="votedetails">
@@ -291,9 +308,14 @@
           </div>
         </div>
       </div>
+
+      <div id="novote" class="outlinebox hidden">
+        <h1>There is currently no vote going on!</h1>
+      </div>
     </div>
 
     <script>
+      const voteUpdateInterval = 1000;
       document.addEventListener('DOMContentLoaded', function() {
         //const loadEl = document.querySelector('#load');
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
@@ -310,6 +332,94 @@
         // firebase.performance(); // call to activate
         //
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+        let activeVoteData = undefined;
+        function updateVoteUI(fullRefresh) {
+          if (activeVoteData === undefined) {
+            document.getElementById("voteinfo").classList.add("hidden");
+            document.getElementById("novote").classList.remove("hidden");
+            return;
+          }
+
+          document.getElementById("novote").classList.add("hidden");
+          document.getElementById("voteinfo").classList.remove("hidden");
+
+          if (fullRefresh) {
+            document.getElementById("voteprompt").innerText = activeVoteData.prompt;
+            document.getElementById("postdescription").innerText = activeVoteData.description;
+          }
+
+          let totalVotes = 0;
+          for (let i = 0; i < activeVoteData.votes.length; i++) {
+            totalVotes += activeVoteData.votes[i];
+          }
+
+          const voteOpts = document.getElementById("voteopts");
+          const votes = document.getElementById("votes");
+          if (fullRefresh) {
+            // Remove all existing vote options
+            while (voteOpts.firstChild) {
+              voteOpts.removeChild(voteOpts.firstChild);
+            }
+
+            for (let i = 0; i < activeVoteData.options.length; i++) {
+              const newOpt = document.createElement("li");
+              const newOptText = document.createElement("strong");
+              newOptText.innerText = activeVoteData.options[i];
+              newOpt.appendChild(newOptText);
+              voteOpts.appendChild(newOpt);
+            }
+
+            while (votes.firstChild) {
+              votes.removeChild(votes.firstChild);
+            }
+
+            for (let i = 0; i < activeVoteData.options.length; i++) {
+              const newVote = document.createElement("li");
+              newVote.style.width = totalVotes == 0 ? `${100/activeVoteData.options.length}%` : `${(activeVoteData.votes[i] / totalVotes * 100)}%`;
+              newVote.style.backgroundColor = `var(--vote${i + 1})`;
+              newVote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}%` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
+              votes.appendChild(newVote);
+            }
+          } else {
+            const voteOptsChildren = voteOpts.children;
+            for (let i = 0; i < voteOptsChildren.length; i++) {
+              const voteOpt = voteOptsChildren[i];
+              const voteOptText = voteOpt.children[0];
+              voteOptText.innerText = activeVoteData.options[i];
+            }
+
+            // Update votes list
+            const votesChildren = votes.children;
+            for (let i = 0; i < votesChildren.length; i++) {
+              const vote = votesChildren[i];
+              vote.innerHTML = activeVoteData.options[i] + " (" + (totalVotes == 0 ? `${+(100/activeVoteData.options.length).toFixed(2)}%` : +(activeVoteData.votes[i] / totalVotes * 100).toFixed(2)) + "%)";
+              vote.style.width = totalVotes == 0 ? `${100/activeVoteData.options.length}%` : (activeVoteData.votes[i] / totalVotes * 100) + "%";
+            }
+          }
+
+          document.getElementById("optsandinfo").children[1].innerText = totalVotes + " votes registered";
+        }
+
+        const activeVote = firebase.functions().httpsCallable('activeVote');
+        function updateVote() {
+          activeVote().then((data) => {
+            if (data && data.data) {
+              if (!activeVoteData || activeVoteData.id !== data.id) {
+                activeVoteData = data.data;
+                updateVoteUI(true);
+              } else {
+                activeVoteData = data.data;
+                updateVoteUI(false);
+              }
+            }
+
+            setTimeout(updateVote, voteUpdateInterval);
+          });
+        }
+
+        updateVoteUI(true);
+        updateVote();
 
         try {
           let app = firebase.app();

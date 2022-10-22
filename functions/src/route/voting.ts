@@ -1,3 +1,4 @@
+import * as functions from "firebase-functions";
 import express, {Request, Response} from "express";
 import {
   getEntriesFromSnapshot,
@@ -120,6 +121,19 @@ app.get("/count", async (req: Request, res: Response) => {
 
 app.get("/active", async (req: Request, res: Response) => {
   res.json({id: (await getActiveVote())?.id});
+});
+
+export const activeVoteState = functions.https.onCall(async () => {
+  const vote = await getActiveVote();
+  if (!vote) return undefined;
+
+  const voteData = await vote.get();
+  return {
+    ...voteData.data(),
+    voteId: vote.id,
+    votes: (await Promise.all(getVoteCounts(voteData)))
+        .map((query) => query.size),
+  };
 });
 
 export default app;

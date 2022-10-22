@@ -20,6 +20,7 @@ export type VoteEntry = {
 
 export type Vote = {
     prompt: string
+    description: string
     [optionsField]: Array<string>
     [activeField]?: boolean
 };
@@ -44,14 +45,17 @@ export const updateVoteEntry = async (
     vote: DocumentReference<VoteEntry>,
     voteIndex: number
 ) =>
-  vote.update({voteIndex});
+  vote.update({[voteIndexField]: voteIndex});
 export const makeVoteEntry = async (
     vote: DocumentReference<Vote>,
     username: string,
     voteIndex: number
 ) =>
   vote.collection(entriesCollectionName)
-      .add({username, voteIndex}) as Promise<DocumentReference<VoteEntry>>;
+      .add({
+        [usernameField]: username,
+        [voteIndexField]: voteIndex,
+      }) as Promise<DocumentReference<VoteEntry>>;
 
 export const getVoteCounts = (
     vote: DocumentSnapshot<Vote>
@@ -80,8 +84,16 @@ export const getEntriesFromSnapshot = async (
   ).docs.map((doc) => doc.data() as VoteEntry);
 };
 
-export const createVote = async (prompt: string, options: Array<string>) => {
-  const vote = await votesCollection.add({prompt, options});
+export const createVote = async (
+    prompt: string,
+    description: string,
+    options: Array<string>
+) => {
+  const vote = await votesCollection.add({
+    prompt,
+    description,
+    [optionsField]: options,
+  });
   return vote.id;
 };
 

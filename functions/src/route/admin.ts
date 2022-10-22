@@ -9,6 +9,7 @@ app.use(cors());
 app.post("/create", async (req: Request, res: Response) => {
   const prompt = req.body.prompt as string | undefined;
   const options = req.body.options as Array<string> | undefined;
+  const description = req.body.description as string | undefined;
 
   if (!prompt) {
     res.status(400).json({error: "Missing prompt"});
@@ -20,7 +21,12 @@ app.post("/create", async (req: Request, res: Response) => {
     return;
   }
 
-  res.json({id: await createVote(prompt, options)});
+  if (!description) {
+    res.status(400).json({error: "Missing description"});
+    return;
+  }
+
+  res.json({id: await createVote(prompt, description, options)});
 });
 
 app.put("/setActive", async (req: Request, res: Response) => {

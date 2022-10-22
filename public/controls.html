@@ -101,6 +101,12 @@
             </div>
             <div class="form-row">
                 <span class="form-row-number"></span>
+             
+                <input type="text" class="form-row-field-input" placeholder=" " name="POST-description">
+                <label for="POST-prompt" class="form-row-field">Description</label>
+            </div>
+            <div class="form-row">
+                <span class="form-row-number"></span>
         
                 <input type="text" class="form-row-field-input" placeholder=" " name="POST-opt1">
                 <label for="POST-opt1" class="form-row-field">Option 1</label>
@@ -129,7 +135,7 @@
 
     <script>
         const DEBUG = true;
-        const target = (DEBUG ? "http://127.0.0.1:5001/" : "https://us-central1-streamchair-psychology.cloudfunctions.net/") + "streamchair-psychology/us-central1/";
+        const target = DEBUG ? "http://127.0.0.1:5001/streamchair-psychology/us-central1/" : "https://us-central1-streamchair-psychology.cloudfunctions.net/";
         
       document.addEventListener('DOMContentLoaded', function() {
         const createVoteForm = document.querySelector('#createVoteForm');
@@ -139,9 +145,15 @@
             
             const formData = new FormData(createVoteForm);
             const prompt = formData.get("POST-prompt");
+            const description = formData.get("POST-description");
 
             if (!prompt) {
                 alert("Please enter a prompt");
+                return;
+            }
+
+            if (!description) {
+                alert("Please enter a description");
                 return;
             }
 
@@ -172,6 +184,7 @@
             req.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             req.send(JSON.stringify({
                 prompt,
+                description,
                 options
             }));
         }
