@@ -81,18 +81,39 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-        padding: 8px 16px;
+        padding: 8px 4px;
         list-style: none;
         align-items: flex-start;
         margin-top: 1px;
         
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        /*-ms-overflow-style: none;  /* IE and Edge */
+        /*scrollbar-width: none;  /* Firefox */
       }
 
+      /*
       #chatcontent::--webkit-scrollbar {
         display: none;
         visibility: hidden;
+      }
+      */
+
+      #chatentry {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        margin: 1px;
+      }
+
+      #chatusername {
+        font-weight: bold;
+        flex: 1;
+        margin-right: auto;
+        margin-bottom: auto;
+      }
+
+      #chatmessage {
+        margin-left: 8px;
+        flex: 5;
       }
 
       hr.solid {
@@ -216,6 +237,8 @@
         -moz-transition-timing-function: ease-in-out;
         -o-transition-timing-function: ease-in-out;
         transition-timing-function: ease-in-out;
+        white-space: nowrap;
+        overflow-x: hidden;
       }
 
       #voteopts {
@@ -274,12 +297,7 @@
       <div id="chat" class="outlinebox">
         <h2 id="chattitle">JURY NOTES</h2>
         <hr class="solid">
-        <ul id="chatcontent">
-          <li>asdfasdfasdf</li>
-          <li>asdf234234</li>
-          <li>rhg 465y 4</li>
-          <li>5u 5j  </li>
-        </ul>
+        <ul id="chatcontent"></ul>
       </div>
 
       <div id="voteinfo" class="outlinebox">
@@ -320,9 +338,102 @@
     </div>
 
     <script>
+      // Settings
       const voteUpdateInterval = 1000;
       const maxBarAnimateTime = 2; // Seconds
+      const optionsField = "options";
+      const activeField = "active";
+
+      function runTwitchAuth(token, secret, id, callback) {
+        const xhr = new XMLHttpRequest();
+        xhr.onload = () => {
+          if (xhr.status === 200) {
+            const authObj = JSON.parse(xhr.responseText);
+            if (authObj && authObj.access_token) {
+              callback(authObj.access_token);
+            } else {
+              // Probably my fault?
+              console.error("Error getting access token");
+            }
+          } else {
+            // Definitely not my fault
+            console.log("Error: " + xhr.status);
+          }
+        };
+        xhr.open("POST", "https://id.twitch.tv/oauth2/token");
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send(`grant_type=refresh_token&refresh_token=${token}&client_secret=${secret}&client_id=${id}`);
+      }
+
+      function makeChatEntry(username, message) {
+        const entry = document.createElement("li");
+        entry.id = "chatentry";
+        const user = document.createElement("div");
+        const msg = document.createElement("div");
+        user.id = "chatusername";
+        user.innerText = username + ":";
+        msg.id = "chatmessage";
+        msg.innerText = message;
+        entry.appendChild(user);
+        entry.appendChild(msg);
+        return entry;
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const username = urlParams.get('username');
+      const token = urlParams.get('token');
+      const secret = urlParams.get('secret');
+      const id = urlParams.get('id');
+      const channel = urlParams.get('channel');
+      let activeVoteData = undefined; // Holds current vote info
+
       document.addEventListener('DOMContentLoaded', function() {
+        const chatWindow = document.getElementById("chatcontent");
+        const activeVote = firebase.functions().httpsCallable('activeVote');
+        const castVote = firebase.functions().httpsCallable('castVote');
+
+        const { Client } = tmi;
+        runTwitchAuth(token, secret, id, (auth) => {
+          const tmiClient = new Client({
+            identity: {
+              username,
+              password: `oauth:${auth}`
+            },
+            channels: [
+              channel
+            ]
+          });
+
+          tmiClient.on('message', (channel, userstate, msg, self) => {
+            if (self) return; // Ignore messages from the bot
+          
+            // Remove whitespace from chat message
+            const commandName = msg.trim();
+
+            console.log(channel, userstate, msg, self);
+          
+            const resolvedData = activeVoteData
+            const username = userstate.username;
+            if (resolvedData && username) {
+              let voted = false;
+              resolvedData[optionsField].forEach((option, index) => {
+                if (commandName === option) {
+                  castVote({voteId: resolvedData.voteId, voter: username, voteIndex: index});
+                  voted = true;
+                }
+              });
+
+              if (!voted) chatWindow.appendChild(makeChatEntry(username, msg))
+            }
+          });
+
+          tmiClient.on('connected', (address, port) => {
+            console.log(`* Connected to ${address}:${port}`);
+          });
+
+          tmiClient.connect();
+        });
+
         //const loadEl = document.querySelector('#load');
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
         // // The Firebase SDK is initialized and available here!
@@ -339,7 +450,6 @@
         //
         // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
 
-        let activeVoteData = undefined;
         function updateVoteUI(fullRefresh) {
           if (activeVoteData === undefined) {
             document.getElementById("voteinfo").classList.add("hidden");
@@ -431,7 +541,6 @@
           document.getElementById("optsandinfo").children[1].innerText = totalVotes + " votes registered";
         }
 
-        const activeVote = firebase.functions().httpsCallable('activeVote');
         function updateVote() {
           activeVote().then((data) => {
             if (data) {
