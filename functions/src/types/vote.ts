@@ -14,7 +14,6 @@ const optionsField = "options";
 const activeField = "active";
 
 export type VoteEntry = {
-    [usernameField]: string
     [voteIndexField]: number
 };
 
@@ -35,13 +34,6 @@ export const getVoteSnapshot = async (id: string) =>
         .doc(id)
         .get() as Promise<DocumentSnapshot<Vote>>;
 export const getVote = async (id: string) => (await getVoteSnapshot(id)).data();
-export const getVoteEntry = async (
-    vote: DocumentReference<Vote>,
-    username: string
-) =>
-  (await getEntriesCollection(vote)
-      .where(usernameField, "==", username)
-      .get() as QuerySnapshot<VoteEntry>).docs[0]?.ref;
 export const updateVoteEntry = async (
     vote: DocumentSnapshot<Vote>,
     username: string,
@@ -51,16 +43,6 @@ export const updateVoteEntry = async (
       .collection(entriesCollectionName)
       .doc(username)
       .set({[voteIndexField]: voteIndex});
-export const makeVoteEntry = async (
-    vote: DocumentReference<Vote>,
-    username: string,
-    voteIndex: number
-) =>
-  vote.collection(entriesCollectionName)
-      .add({
-        [usernameField]: username,
-        [voteIndexField]: voteIndex,
-      }) as Promise<DocumentReference<VoteEntry>>;
 
 export const getVoteCounts = (
     vote: DocumentSnapshot<Vote>
@@ -79,14 +61,14 @@ export const getVoteCounts = (
 export const getEntriesFromSnapshot = async (
     snapshot: DocumentSnapshot<Vote>,
     voteIndex: number
-): Promise<VoteEntry[]> => {
+): Promise<{ [usernameField]: string, [voteIndexField]: number }[]> => {
   const entryCollection = getEntriesCollection(snapshot.ref);
   return (await (
         Number.isNaN(voteIndex) ?
             entryCollection :
             entryCollection.where(voteIndexField, "==", voteIndex)
   ).get()
-  ).docs.map((doc) => doc.data() as VoteEntry);
+  ).docs.map((doc) => ({ [usernameField]: doc.id, ...(doc.data() as VoteEntry)}));
 };
 
 export const createVote = async (
