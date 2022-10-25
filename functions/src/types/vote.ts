@@ -47,7 +47,10 @@ export const updateVoteEntry = async (
     username: string,
     voteIndex: number
 ) =>
-  vote.ref.collection(entriesCollectionName).doc(username).set({[voteIndexField]: voteIndex});
+  vote.ref
+      .collection(entriesCollectionName)
+      .doc(username)
+      .set({[voteIndexField]: voteIndex});
 export const makeVoteEntry = async (
     vote: DocumentReference<Vote>,
     username: string,
