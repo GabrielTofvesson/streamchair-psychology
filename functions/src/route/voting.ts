@@ -4,8 +4,6 @@ import {
   getEntriesFromSnapshot,
   getVoteSnapshot,
   getVoteCounts,
-  getVoteEntry,
-  makeVoteEntry,
   updateVoteEntry,
   getVote,
   getActiveVote,
@@ -42,14 +40,7 @@ const vote = async (
     return {error: "Invalid vote index", code: 400};
   }
 
-  const entry = await getVoteEntry(vote.ref, voter);
-  if (!entry) {
-    await makeVoteEntry(vote.ref, voter, voteIndex);
-    await updateVoteCount();
-    return {success: true};
-  }
-
-  await updateVoteEntry(entry, voteIndex);
+  await updateVoteEntry(vote, voter, voteIndex);
   await updateVoteCount();
   return {success: true};
 };

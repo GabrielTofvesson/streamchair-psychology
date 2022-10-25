@@ -43,10 +43,11 @@ export const getVoteEntry = async (
       .where(usernameField, "==", username)
       .get() as QuerySnapshot<VoteEntry>).docs[0]?.ref;
 export const updateVoteEntry = async (
-    vote: DocumentReference<VoteEntry>,
+    vote: DocumentSnapshot<Vote>,
+    username: string,
     voteIndex: number
 ) =>
-  vote.update({[voteIndexField]: voteIndex});
+  vote.ref.collection(entriesCollectionName).doc(username).set({[voteIndexField]: voteIndex});
 export const makeVoteEntry = async (
     vote: DocumentReference<Vote>,
     username: string,
